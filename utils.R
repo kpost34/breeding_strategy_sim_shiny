@@ -97,6 +97,98 @@ extract_breeding_info <- function(df, include_advanced=FALSE, keep_objects=FALSE
 
 
 
+# Plotting Functions================================================================================
+## Genetic gain curve
+plot_gen_gain <- function(df){
+  #extract slope
+  m <- lm(mean_gv ~ gen, data=df)[[1]][2] %>%
+    unname() %>%
+    round(3)
+  
+  #create plot
+  p <- df %>%
+    ggplot(aes(x=gen, y=mean_gv)) +
+    geom_point() +
+    geom_smooth(method="lm") +
+    scale_x_continuous(breaks=seq(0, 10, 2), 
+                       labels=seq(0, 10, 2), 
+                       limits=c(0, NA),
+                       expand=expansion(mult=c(0, 0.05))) +
+    scale_y_continuous(limits=c(0, NA),
+                       expand=expansion(mult=c(0, 0.05))) +
+    labs(x="Generation",
+         y="Mean genetic value") +
+    annotate(geom = "label", 
+             x = 0.5, y = max(df_values[["mean_gv"]]), 
+             hjust=0, vjust=0,
+             label = paste("Slope:", m_gen_value), 
+             fill = "yellow", 
+             color = "black") +
+    theme_bw()
+  
+  return(p)
+}
+
+
+## Breeder's dilemma
+plot_breeders_dilemma <- function(df){
+  p <- df %>%
+    ggplot() +
+    geom_line(aes(x=gen, y=mean_gv),
+              color="darkred") +
+    geom_point(aes(x=gen, y=mean_gv),
+               color="darkred") +
+    geom_area(aes(x=gen, y=var_g),
+              fill="navy") +
+    scale_x_continuous(breaks=seq(0, 10, 2),
+                       labels=seq(0, 10, 2)) +
+    scale_y_continuous(
+      "Mean genetic value",
+      sec.axis = sec_axis(~ .x, name = "Genetic variance")
+    ) +
+    xlab("Generation") +
+    theme_bw()
+  
+  return(p)
+}
+
+
+## Signal vs Noise
+plot_signal_vs_noise <- function(df){
+  p <- df %>%
+    #pivot data into correct format
+    pivot_longer(
+      cols=c(var_g, var_p),
+      names_to="var_part",
+      values_to="variance"
+    ) %>%
+    mutate(
+      var_part=ifelse(
+        var_part=="var_g", 
+        "Vg",
+        "Ve"
+      )
+    ) %>%
+    #create plot
+    ggplot() +
+    geom_area(aes(x=gen, y=variance, color=var_part, fill=var_part),
+              color="black") +
+    scale_fill_manual("Variance \nComponent",
+                      values=c("Vg"="green", "Ve"="red")) +
+    scale_x_continuous(labels=1:10,
+                       breaks=1:10) +
+    xlab("Generation") +
+    theme_bw() +
+    theme(
+      legend.position="bottom"
+    )
+  
+  return(p)
+}
+
+
+
+
 
 
 
