@@ -35,7 +35,7 @@ pop <- newPop(founders, simParam=SP)
 
 
 # Run Simulation & Extract Information==============================================================
-## One selection intensity: 10%
+## One selected count: 10
 pop_1 <- pop
 
 #create and seed empty df
@@ -66,12 +66,12 @@ for(gen in df$gen){
 }
 
 
-## Multiple selection intensities
+## Multiple selected counts (fractions)
 #initialize the df
 n_gen <- 10
 
 df2_map <- tibble(
-  sel = numeric(n_gen),
+  sel_count = numeric(n_gen),
   gen = 1:n_gen,
   mean_gv = numeric(n_gen),
   var_g = numeric(n_gen),
@@ -79,13 +79,13 @@ df2_map <- tibble(
   sel_acc = numeric(n_gen)
 )
 
-sel_strength <- c(5, 15, 30)
+sel_count <- c(5, 10, 15)
 
-nm_sel_strength <- paste0("sel_str_", sel_strength)
+nm_sel_count <- paste0("sel_count_", sel_count)
 
 
 #run the loop
-df2 <- sel_strength %>%
+df2 <- sel_count %>%
   purrr::map_df(function(x){
     pop_2 <- pop
     for(g in 1:n_gen){
@@ -100,7 +100,7 @@ df2 <- sel_strength %>%
       pop_2 <- randCross(parents, nCrosses=100, simParam=SP)
       
       #d. record the parameters of interest
-      df2_map[g, "sel"] <- x
+      df2_map[g, "sel_count"] <- x
       df2_map[g, "mean_gv"] <- meanG(pop_2)
       df2_map[g, "var_g"] <- varG(pop_2)
       df2_map[g, "var_p"] <- varP(pop_2)
@@ -113,7 +113,7 @@ df2 <- sel_strength %>%
 
 # View Results======================================================================================
 ## Genetic Gain Curve
-### Single selection intensity
+### Single selected count
 #plot
 df %>%
   ggplot(aes(x=gen, y=mean_gv)) +
@@ -180,7 +180,7 @@ df %>%
 ## Accuracy Decay
 #selection accuracy = correlation between GV and phenotype over time
 
-### Single intensity
+### Single selected count
 df %>%
   ggplot(aes(x=gen, y=sel_acc)) +
   geom_point() +
@@ -189,26 +189,26 @@ df %>%
 #Pattern: selection accuracy declines over time (generations)
 
 
-### Multiple intensities
+### Multiple selected counts
 #plot
 df2 %>%
-  ggplot(aes(x=gen, y=mean_gv, color=as.factor(sel))) +
+  ggplot(aes(x=gen, y=sel_acc, color=as.factor(sel_count))) +
   geom_point() + 
   geom_smooth(method="lm", se=FALSE) +
   labs(x="Generation",
-       y="Mean genetic value",
-       color="Selection intensity") +
+       y="Selection accuracy",
+       color="Selected count") +
   scale_color_viridis_d(end=0.6) +
   theme_bw() +
   theme(legend.position="bottom")
-#Pattern: slope increases with greater intensity (smaller % retained)
+#Pattern: slope increases with smaller selected count
 
 #slope
 m_sel_strength <- df2 %>%
-  group_by(sel) %>%
+  group_by(sel_count) %>%
   nest() %>%
   mutate(slope = map_dbl(data, ~coef(lm(mean_gv ~ gen, data = .x))[2])) %>%
-  select(sel, slope)
+  select(sel_count, slope)
 
 m_sel_strength
 
