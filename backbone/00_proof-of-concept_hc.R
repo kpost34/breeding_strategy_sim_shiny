@@ -59,10 +59,10 @@ for(gen in df$gen){
   pop_1 <- randCross(parents, nCrosses=100, simParam=SP)
   
   #d. record the parameters of interest
-  df[gen, "mean_gv"] <- meanG(pop_1)
-  df[gen, "var_g"] <- varG(pop_1)
-  df[gen, "var_p"] <- varP(pop_1)
-  df[gen, "sel_acc"] <- cor(pop_1@gv, pop_1@pheno)
+  df[gen, "mean_gv"] <- meanG(pop_1) #mean genetic value
+  df[gen, "var_g"] <- varG(pop_1) #total genetic variance
+  df[gen, "var_p"] <- varP(pop_1) #total phenotypic variance
+  df[gen, "sel_acc"] <- cor(pop_1@gv, pop_1@pheno) #corr b/t true genetic value & phenotypic value
 }
 
 
